@@ -55,12 +55,12 @@ func _build_body() -> void:
 	pelvis = _part(0.0, HIP_Y - 0.06, 0.0, Vector3(0.30, 0.20, 0.20), shorts, CapsuleMesh.new())
 	torso = _part(0.0, HIP_Y + 0.28, 0.0, Vector3(0.34, 0.52, 0.22), shirt, CapsuleMesh.new())
 	head = _part(0.0, SHOULDER_Y + 0.20, 0.0, Vector3(0.22, 0.24, 0.22), skin, SphereMesh.new())
-	arm_l = _part(-0.26, SHOULDER_Y - 0.04, 0.0, Vector3(0.10, 0.50, 0.10), skin, CapsuleMesh.new())
-	arm_r = _part(0.26, SHOULDER_Y - 0.04, 0.0, Vector3(0.10, 0.50, 0.10), skin, CapsuleMesh.new())
-	thigh_l = _part(-0.10, HIP_Y - 0.22, 0.0, Vector3(0.14, 0.44, 0.14), shorts, CapsuleMesh.new())
-	thigh_r = _part(0.10, HIP_Y - 0.22, 0.0, Vector3(0.14, 0.44, 0.14), shorts, CapsuleMesh.new())
-	shin_l = _part(-0.10, HIP_Y - 0.58, 0.0, Vector3(0.11, 0.40, 0.11), socks, CapsuleMesh.new())
-	shin_r = _part(0.10, HIP_Y - 0.58, 0.0, Vector3(0.11, 0.40, 0.11), socks, CapsuleMesh.new())
+	arm_l = _part(-0.26, SHOULDER_Y - 0.04, 0.0, Vector3(0.11, 0.50, 0.11), skin, CapsuleMesh.new())
+	arm_r = _part(0.26, SHOULDER_Y - 0.04, 0.0, Vector3(0.11, 0.50, 0.11), skin, CapsuleMesh.new())
+	thigh_l = _part(-0.10, HIP_Y - 0.22, 0.0, Vector3(0.15, 0.44, 0.15), shorts, CapsuleMesh.new())
+	thigh_r = _part(0.10, HIP_Y - 0.22, 0.0, Vector3(0.15, 0.44, 0.15), shorts, CapsuleMesh.new())
+	shin_l = _part(-0.10, HIP_Y - 0.58, 0.0, Vector3(0.12, 0.40, 0.12), socks, CapsuleMesh.new())
+	shin_r = _part(0.10, HIP_Y - 0.58, 0.0, Vector3(0.12, 0.40, 0.12), socks, CapsuleMesh.new())
 	# Sock/leg split: upper shin skin, lower sock is approximated with socks material.
 	# Boots: small boxes at the feet.
 	var foot_l := _part(-0.10, 0.05, 0.06, Vector3(0.10, 0.08, 0.26), boots, BoxMesh.new())
@@ -86,7 +86,7 @@ func _part(px: float, py: float, pz: float, size: Vector3, mat: Material, mesh_m
 	var mi := MeshInstance3D.new()
 	if mesh_mesh is CapsuleMesh:
 		var c := mesh_mesh as CapsuleMesh
-		c.radius = minf(size.x, size.z) * 0.5
+		c.radius = size.x * 0.5
 		c.height = size.y
 	elif mesh_mesh is SphereMesh:
 		var s := mesh_mesh as SphereMesh

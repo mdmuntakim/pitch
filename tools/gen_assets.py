@@ -335,30 +335,34 @@ def thump(freq, seconds, punch=0.5):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
+    ap.add_argument("--skip-textures", action="store_true")
     args = ap.parse_args()
     os.makedirs(TEX_DIR, exist_ok=True)
     os.makedirs(AUD_DIR, exist_ok=True)
     total = 0
     print("textures:")
-    total += grass_detail()
-    total += crowd_texture()
-    brands = [("VOLTA", (18, 60, 120), (240, 240, 240), (255, 200, 40)),
-              ("AERON", (20, 20, 24), (230, 230, 230), (80, 200, 160)),
-              ("PIXELBANK", (30, 70, 40), (240, 240, 220), (200, 90, 40)),
-              ("MATCHDAY", (90, 20, 30), (240, 230, 200), (240, 200, 60)),
-              ("PITCHSIDE", (24, 40, 70), (220, 230, 240), (60, 160, 220)),
-              ("ORBITA", (40, 24, 60), (235, 220, 240), (180, 120, 240))]
-    for i, (name, bg, fg, acc) in enumerate(brands):
-        total += ad_board(i, name, bg, fg, acc)
-    total += ball_texture()
-    total += kit_fabric()
-    total += net_texture()
+    if args.skip_textures:
+        print("  skipped")
+    else:
+        total += grass_detail()
+        total += crowd_texture()
+        brands = [("VOLTA", (18, 60, 120), (240, 240, 240), (255, 200, 40)),
+                  ("AERON", (20, 20, 24), (230, 230, 230), (80, 200, 160)),
+                  ("PIXELBANK", (30, 70, 40), (240, 240, 220), (200, 90, 40)),
+                  ("MATCHDAY", (90, 20, 30), (240, 230, 200), (240, 200, 60)),
+                  ("PITCHSIDE", (24, 40, 70), (220, 230, 240), (60, 160, 220)),
+                  ("ORBITA", (40, 24, 60), (235, 220, 240), (180, 120, 240))]
+        for i, (name, bg, fg, acc) in enumerate(brands):
+            total += ad_board(i, name, bg, fg, acc)
+        total += ball_texture()
+        total += kit_fabric()
+        total += net_texture()
     print("  texture bytes so far:", total)
     print("audio:")
     if args.quick:
         durs = {"crowd_home": 30, "crowd_away": 20, "crowd_chants": 20, "goal_roar": 14}
     else:
-        durs = {"crowd_home": 300, "crowd_away": 150, "crowd_chants": 90, "goal_roar": 14}
+        durs = {"crowd_home": 480, "crowd_away": 400, "crowd_chants": 240, "goal_roar": 14}
     tracks = {
         "crowd_home.wav": lambda: crowd_ambience(durs["crowd_home"], 3, 0.5),
         "crowd_away.wav": lambda: crowd_ambience(durs["crowd_away"], 8, 0.4, 0.25),

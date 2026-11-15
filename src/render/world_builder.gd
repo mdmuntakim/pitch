@@ -51,7 +51,9 @@ func _build_environment() -> void:
 	sun.light_color = Color(1.0, 0.96, 0.88) if not night else Color(0.72, 0.82, 1.0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-	sun.directional_shadow_max_distance = 160.0
+	sun.directional_shadow_max_distance = 120.0
+	sun.shadow_bias = 0.35
+	sun.shadow_normal_bias = 3.0
 	sun.shadow_blur = 1.4
 	add_child(sun)
 
@@ -265,7 +267,7 @@ func _build_goals() -> void:
 			var net_mat := StandardMaterial3D.new()
 			net_mat.albedo_texture = net_texture
 			net_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			net_mat.albedo_color = Color(1, 1, 1, 0.5)
+			net_mat.albedo_color = Color(1, 1, 1, 0.35)
 			net_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			net_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 			var back := PlaneMesh.new()
@@ -387,16 +389,16 @@ func _build_instanced_crowd(stands: Node3D, dist_x: float, dist_z: float) -> voi
 			var row := int(rng.randf_range(0, 14))
 			var col := int(rng.randf_range(0, 42))
 			var t := Transform3D(Basis.IDENTITY, Vector3.ZERO)
-			var seat_y := 3.5 + row * 1.05
+			var seat_y := 3.2 + row * 0.95
 			match side:
 				0:
-					t.origin = Vector3(-58.0 + col * 2.8 + rng.randf_range(-0.4, 0.4), seat_y, -dist_z - 4.0 + row * 1.4)
+					t.origin = Vector3(-60.0 + col * 2.9 + rng.randf_range(-0.5, 0.5), seat_y, -dist_z - 2.0 - row * 1.35)
 				1:
-					t.origin = Vector3(-58.0 + col * 2.8 + rng.randf_range(-0.4, 0.4), seat_y, dist_z + 4.0 - row * 1.4)
+					t.origin = Vector3(-60.0 + col * 2.9 + rng.randf_range(-0.5, 0.5), seat_y, dist_z + 2.0 + row * 1.35)
 				2:
-					t.origin = Vector3(-dist_x - 4.0 + row * 1.4, seat_y, -42.0 + col * 2.0 + rng.randf_range(-0.4, 0.4))
+					t.origin = Vector3(-dist_x - 2.0 - row * 1.35, seat_y, -44.0 + col * 2.1 + rng.randf_range(-0.5, 0.5))
 				3:
-					t.origin = Vector3(dist_x + 4.0 - row * 1.4, seat_y, -42.0 + col * 2.0 + rng.randf_range(-0.4, 0.4))
+					t.origin = Vector3(dist_x + 2.0 + row * 1.35, seat_y, -44.0 + col * 2.1 + rng.randf_range(-0.5, 0.5))
 			t.basis = Basis(Vector3.UP, rng.randf_range(-0.2, 0.2))
 			mm.set_instance_transform(idx, t)
 			mm.set_instance_color(idx, crowd_cols[rng.randi() % crowd_cols.size()])

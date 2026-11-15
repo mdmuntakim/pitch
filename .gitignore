@@ -3,6 +3,10 @@
 *.translation
 export_credentials.cfg
 
+# Generated game assets are produced by tools/gen_assets.py
+assets/textures/
+assets/audio/
+
 # Build output (never committed; releases carry the APKs)
 build/
 

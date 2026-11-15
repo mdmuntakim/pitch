@@ -173,12 +173,16 @@ func show_banner(text: String) -> void:
 
 
 func show_card(team_idx: int, number: int, card: String) -> void:
+	if not is_inside_tree():
+		return
 	var col := Color(1, 0.85, 0.2) if card == "yellow" else Color(1, 0.2, 0.2)
 	card_label.text = "%s  %s  #%d" % [card.capitalize(), match_ref.teams[team_idx].short_name, number]
 	card_label.add_theme_color_override("font_color", col)
 	card_label.visible = true
 	var t := get_tree().create_timer(2.5)
-	t.timeout.connect(func() -> void: card_label.visible = false)
+	t.timeout.connect(func() -> void:
+		if is_instance_valid(card_label):
+			card_label.visible = false)
 
 
 func set_charging(power: float) -> void:
