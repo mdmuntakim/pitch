@@ -77,26 +77,33 @@ def grass_detail(size=4096):
     return write_png(os.path.join(TEX_DIR, "grass_detail.png"), rgb)
 
 
-def crowd_texture(w=4096, h=1024):
+def crowd_texture(w=2048, h=512):
+    """Seated crowd seen from the pitch: dark seats, row shadows and small
+    coloured figures so the texture stays readable when mipmapped down."""
     rng = np.random.default_rng(42)
-    cell_w, cell_h = 6, 8
-    cols = w // cell_w
-    rows = h // cell_h
+    img = np.zeros((h, w, 3), np.float32)
+    img[:, :] = (30, 34, 44)
     palette = np.array([
         [190, 60, 55], [55, 80, 170], [225, 215, 190], [60, 140, 90],
         [230, 180, 60], [120, 120, 130], [200, 90, 150], [70, 70, 80],
         [240, 240, 240], [40, 40, 50], [100, 60, 40], [30, 90, 160],
     ], np.float32)
-    pick = rng.integers(0, len(palette), (rows, cols))
-    img = palette[pick]
-    # Add head/shoulder shading variation and vertical darkening between rows.
-    img = img * (0.75 + 0.5 * rng.random((rows, cols, 1))).astype(np.float32)
-    img = np.repeat(np.repeat(img, cell_h, axis=0), cell_w, axis=1)
-    # "Heads": darken the top cell of every person slightly lighter instead.
-    # Add scanline shadows between rows for depth.
-    for r in range(rows):
+    cell_w, cell_h = 10, 16
+    for r in range(h // cell_h):
         y0 = r * cell_h
-        img[y0 + 6:y0 + 8, :, :] = (img[y0 + 6:y0 + 8, :, :] * 0.35).astype(np.uint8)
+        # Step shadow between rows.
+        img[y0:y0 + 3, :] *= 0.55
+        for c in range(w // cell_w):
+            if rng.random() < 0.10:
+                continue
+            x0 = c * cell_w + 1
+            col = palette[rng.integers(0, len(palette))]
+            shade = 0.55 + 0.45 * rng.random()
+            img[y0 + 5:y0 + 14, x0:x0 + 7] = col * shade        # torso
+            img[y0 + 1:y0 + 5, x0 + 2:x0 + 6] = np.array([205, 170, 150], np.float32) * (0.6 + 0.4 * shade)  # head
+    # Concrete aisles.
+    for x in range(0, w, 128):
+        img[:, x:x + 7] = (78, 80, 86)
     return write_png(os.path.join(TEX_DIR, "crowd.png"), np.clip(img, 0, 255).astype(np.uint8))
 
 
@@ -106,6 +113,8 @@ FONT = {
     "C": ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
     "D": ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
     "E": ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+    "F": ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+    "J": ["00001", "00001", "00001", "00001", "10001", "10001", "01110"],
     "G": ["01111", "10000", "10000", "10111", "10001", "10001", "01110"],
     "H": ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
     "I": ["11111", "00100", "00100", "00100", "00100", "00100", "11111"],
@@ -122,7 +131,21 @@ FONT = {
     "V": ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
     "X": ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
     "Y": ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+    "W": ["10001", "10001", "10001", "10101", "10101", "11011", "10001"],
+    "Z": ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
     " ": ["00000", "00000", "00000", "00000", "00000", "00000", "00000"],
+    "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+    "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+    "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+    "3": ["11111", "00010", "00100", "00010", "00001", "10001", "01110"],
+    "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+    "5": ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+    "6": ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
+    "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+    "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+    "9": ["01110", "10001", "10001", "01111", "00001", "00010", "01100"],
+    ":": ["00000", "00100", "00100", "00000", "00100", "00100", "00000"],
+    "-": ["00000", "00000", "00000", "11111", "00000", "00000", "00000"],
 }
 
 
@@ -199,6 +222,32 @@ def net_texture(size=512):
     img[:, ::step] = (240, 240, 240, 200)
     img[::step, :] = (240, 240, 240, 200)
     return write_png(os.path.join(TEX_DIR, "net.png"), img)
+
+
+def scoreboard_texture(w=1024, h=256):
+    """Stadium big screen: original wordmark, live score block and clock."""
+    img = np.zeros((h, w, 3), np.uint8)
+    img[:, :] = (8, 12, 20)
+    img[::4, :] = (12, 18, 30)          # scanlines
+    frame = (60, 78, 104)
+    img[:8, :] = frame
+    img[-8:, :] = frame
+    img[:, :8] = frame
+    img[:, -8:] = frame
+    draw_text(img, "MATCHDAY ELEVEN", 40, 26, 5, (238, 240, 244))
+    draw_text(img, "LIVE", 880, 26, 5, (232, 64, 58))
+    # Score block.
+    img[88:240, 26:556] = (16, 22, 34)
+    draw_text(img, "0", 56, 100, 14, (250, 250, 250))
+    draw_text(img, "-", 152, 100, 14, (150, 160, 175))
+    draw_text(img, "0", 248, 100, 14, (250, 250, 250))
+    # Side panel: half indicator and a simple possession bar (original design).
+    draw_text(img, "1ST HALF", 600, 100, 6, (200, 208, 220))
+    img[170:190, 600:720] = (210, 90, 70)
+    img[170:190, 720:840] = (70, 130, 210)
+    img[170:190, 840:960] = (40, 44, 52)
+    draw_text(img, "00:00", 600, 198, 5, (120, 220, 160))
+    return write_png(os.path.join(TEX_DIR, "scoreboard.png"), img)
 
 
 # ---------------------------------------------------------------------- audio
@@ -357,6 +406,7 @@ def main():
         total += ball_texture()
         total += kit_fabric()
         total += net_texture()
+        total += scoreboard_texture()
     print("  texture bytes so far:", total)
     print("audio:")
     if args.quick:

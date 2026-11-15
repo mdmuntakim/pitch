@@ -65,7 +65,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v1.0.$(git rev-list --count HEAD)"
+          TAG="v1.0.${{ github.run_number }}"
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Matchday Eleven $TAG" \
@@ -89,7 +89,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v1.0.$(git rev-list --count HEAD)"
+          TAG="v1.0.${{ github.run_number }}"
           if compgen -G "docs/screenshots/*.png" >/dev/null; then
             gh release upload "$TAG" docs/screenshots/*.png --repo "$GITHUB_REPOSITORY" --clobber
           fi

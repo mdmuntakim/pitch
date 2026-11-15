@@ -12,10 +12,10 @@ var detail_texture: Texture2D = null
 var ball_texture: Texture2D = null
 var scoreboard_texture: Texture2D = null
 
-const CROWD_INSTANCES_PER_STAND := 3200
+const CROWD_INSTANCES_PER_STAND := 1400
 
 
-static func build(parent: Node, night_: bool, textures: Dictionary) -> WorldBuilder:
+static func build(parent: Node, night_: bool, textures: Dictionary, with_environment := true) -> WorldBuilder:
 	var w := WorldBuilder.new()
 	w.name = "World"
 	w.night = night_
@@ -26,17 +26,19 @@ static func build(parent: Node, night_: bool, textures: Dictionary) -> WorldBuil
 	w.ball_texture = textures.get("ball", null)
 	w.scoreboard_texture = textures.get("scoreboard", null)
 	parent.add_child(w)
-	w._build_all()
+	w._build_all(with_environment)
 	return w
 
 
-func _build_all() -> void:
-	_build_environment()
+func _build_all(with_environment := true) -> void:
+	if with_environment:
+		_build_environment()
 	_build_pitch()
 	_build_lines()
 	_build_goals()
 	_build_ads()
 	_build_stands()
+	_build_big_screen()
 	_build_floodlights()
 	_build_flags()
 
@@ -47,7 +49,7 @@ func _build_environment() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-52 if not night else -38, -35, 0)
-	sun.light_energy = 1.25 if not night else 0.35
+	sun.light_energy = 1.7 if not night else 0.55
 	sun.light_color = Color(1.0, 0.96, 0.88) if not night else Color(0.72, 0.82, 1.0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
@@ -77,19 +79,22 @@ func _build_environment() -> void:
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_sky_contribution = 1.0
-	env.ambient_light_energy = 1.0 if not night else 0.6
+	env.ambient_light_energy = 0.45 if not night else 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.0
+	env.tonemap_exposure = 0.92
 	env.glow_enabled = true
 	env.glow_intensity = 0.5
 	env.glow_bloom = 0.05
 	env.glow_hdr_threshold = 1.05
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.65, 0.72, 0.82) if not night else Color(0.08, 0.10, 0.16)
-	env.fog_density = 0.004 if not night else 0.006
+	env.fog_density = 0.0016 if not night else 0.004
 	env.fog_sky_affect = 0.0
-	env.fxaa_enabled = true
-	env.ssao_enabled = not night  # mobile renderer: SSAO is ignored; blob shadows cover contact darkening
+	# Anti-aliasing is a viewport setting in Godot 4: FXAA for the mobile target.
+	var vp := get_viewport()
+	if vp != null and RenderingServer.get_current_rendering_method() != "gl_compatibility":
+		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+	env.ssao_enabled = (not night) and RenderingServer.get_current_rendering_method() == "forward_plus"
 	env.sdfgi_enabled = false
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -135,10 +140,12 @@ func _build_lines() -> void:
 	_ring(lines, Vector3(0, 0.011, 0), Pitch.CENTER_CIRCLE_RADIUS, lw, 48)
 	_quad(lines, Vector3(0, 0.011, 0), Vector2(0.3, 0.3))
 	for sx in [-1.0, 1.0]:
-		# Penalty area + goal area + spot + arc.
+		# Penalty area + goal area + spot + arc (outlines only, never filled).
 		var px: float = sx * L
-		_quad(lines, Vector3(px - sx * Pitch.PENALTY_AREA_DEPTH * 0.5, 0.011, 0), Vector2(Pitch.PENALTY_AREA_DEPTH, Pitch.PENALTY_AREA_WIDTH))
-		_quad(lines, Vector3(px - sx * Pitch.GOAL_AREA_DEPTH * 0.5, 0.011, 0), Vector2(Pitch.GOAL_AREA_DEPTH, Pitch.GOAL_AREA_WIDTH))
+		_rect_outline(lines, Vector3(px - sx * Pitch.PENALTY_AREA_DEPTH * 0.5, 0.011, 0),
+			Vector2(Pitch.PENALTY_AREA_DEPTH, Pitch.PENALTY_AREA_WIDTH), lw)
+		_rect_outline(lines, Vector3(px - sx * Pitch.GOAL_AREA_DEPTH * 0.5, 0.011, 0),
+			Vector2(Pitch.GOAL_AREA_DEPTH, Pitch.GOAL_AREA_WIDTH), lw)
 		_quad(lines, Vector3(px - sx * Pitch.PENALTY_SPOT_FROM_GOAL, 0.011, 0), Vector2(0.25, 0.25))
 		# Penalty arc: portion of circle radius 9.15 around the spot outside the box.
 		_arc(lines, Vector3(px - sx * Pitch.PENALTY_SPOT_FROM_GOAL, 0.011, 0), 9.15, lw, 24, sx)
@@ -153,6 +160,15 @@ func _quad(parent: Node3D, pos: Vector3, size: Vector2) -> void:
 	var mi := _mesh_node(m, _white_mat(), "line")
 	mi.position = pos
 	parent.add_child(mi)
+
+
+func _rect_outline(parent: Node3D, center: Vector3, size: Vector2, lw: float) -> void:
+	var hx := size.x * 0.5
+	var hz := size.y * 0.5
+	_quad(parent, center + Vector3(0, 0, -hz), Vector2(size.x + lw, lw))
+	_quad(parent, center + Vector3(0, 0, hz), Vector2(size.x + lw, lw))
+	_quad(parent, center + Vector3(-hx, 0, 0), Vector2(lw, size.y))
+	_quad(parent, center + Vector3(hx, 0, 0), Vector2(lw, size.y))
 
 
 func _white_mat() -> StandardMaterial3D:
@@ -331,13 +347,38 @@ func _build_ads() -> void:
 
 # -------------------------------------------------------------------- stands
 
+func _build_big_screen() -> void:
+	if scoreboard_texture == null:
+		return
+	var quad := QuadMesh.new()
+	quad.size = Vector2(26.0, 6.5)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = scoreboard_texture
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission_texture = scoreboard_texture
+	mat.emission = Color(1, 1, 1)
+	mat.emission_energy_multiplier = 2.4 if night else 1.0
+	var mi := _mesh_node(quad, mat, "BigScreen")
+	mi.position = Vector3(0, 24.0, -(Pitch.HALF_WIDTH + 14.5))
+	add_child(mi)
+	var housing := BoxMesh.new()
+	housing.size = Vector3(27.5, 7.6, 0.7)
+	var hmat := StandardMaterial3D.new()
+	hmat.albedo_color = Color(0.05, 0.055, 0.065)
+	hmat.roughness = 0.75
+	var hmi := _mesh_node(housing, hmat, "BigScreenHousing")
+	hmi.position = Vector3(0, 24.0, -(Pitch.HALF_WIDTH + 15.0))
+	add_child(hmi)
+
+
 func _build_stands() -> void:
 	var stand_mat := StandardMaterial3D.new()
 	if crowd_texture != null:
 		stand_mat.albedo_texture = crowd_texture
-		stand_mat.uv1_scale = Vector3(14, 5, 1)
+		stand_mat.uv1_scale = Vector3(5, 2, 1)
 		stand_mat.roughness = 0.95
-	stand_mat.albedo_color = Color(0.9, 0.9, 0.9) if crowd_texture == null else Color(1, 1, 1, 1)
+	stand_mat.albedo_color = Color(0.35, 0.36, 0.40) if crowd_texture == null else Color(0.55, 0.55, 0.58, 1)
 
 	var stands := Node3D.new()
 	stands.name = "Stands"

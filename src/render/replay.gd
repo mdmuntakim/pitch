@@ -21,7 +21,7 @@ static func attach(match_ref_: Match) -> Replay:
 	r.camera.fov = 38.0
 	r.camera.current = false
 	r.add_child(r.camera)
-	r.match_ref_.add_child(r)
+	r.match_ref.add_child(r)
 	return r
 
 

@@ -26,14 +26,16 @@ func _ready() -> void:
 	# Menu first.
 	controls = TouchControls.attach(null)
 	controls.visible = false
+	add_child(controls)
 	menu = Menu.attach(controls)
+	add_child(menu)
 	menu.start_requested.connect(_start_match)
 	# Boot straight into the menu; the match is built on demand.
 	camera = Camera3D.new()
 	camera.fov = 30.0
 	add_child(camera)
 	# Menu backdrop camera: slow orbit over the pitch.
-	var backdrop_world := WorldBuilder.build(self, false, textures)
+	var backdrop_world := WorldBuilder.build(self, false, textures, false)
 	backdrop_world.name = "MenuWorld"
 	menu_backdrop_world = backdrop_world
 	_load_saved_settings()
@@ -109,6 +111,7 @@ func _start_match(cfg: Dictionary) -> void:
 	# Blob shadows.
 	_attach_blob_shadows(teams)
 	hud = HUD.attach(match_node)
+	add_child(hud)
 	hud.match_ref = match_node
 	match_node.event_banner.connect(hud.show_banner)
 	match_node.card_banner.connect(hud.show_card)

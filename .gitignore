@@ -8,7 +8,8 @@ assets/textures/
 assets/audio/
 
 # Build output (never committed; releases carry the APKs)
-build/
+build/*
+!build/export.sh
 
 # OS
 .DS_Store
