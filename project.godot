@@ -1,0 +1,63 @@
+; Engine configuration file.
+; Matchday Eleven - original 3D football game, Godot 4.5
+
+config_version=5
+
+[application]
+
+config/name="Matchday Eleven"
+config/description="An original 11v11 football simulation with eFootball-style on-screen controls. All assets are original and procedurally generated."
+run/main_scene="res://src/main.tscn"
+config/features=PackedStringArray("4.5")
+config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.013, 0.043, 0.02, 1)
+boot_splash/show_image=false
+
+[android]
+
+modules/text_to_speech=false
+
+[audio]
+
+buses/default_bus_layout=""
+
+[debug]
+
+settings/stdout/gdscript_prints=false
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/handheld/orientation=4
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[input]
+
+ui_cancel={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194305,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[physics]
+
+common/physics_ticks_per_second=60
+3d/default_gravity=9.81
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=2
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/size.mobile=2048
+environment/glow/upscale_mode=0
+environment/ambient_light/sourced_from_environment=false
